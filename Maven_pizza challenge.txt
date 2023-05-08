@@ -1,0 +1,60 @@
+
+# 1) How many customers do we have each day?
+select `date`, count(date) as number_of_customers from orders
+group by `date`;
+with avg_customers as (
+select `date`, count(date) as number_of_customers from orders
+group by `date`)
+select avg(number_of_customers) from avg_customers;
+
+##2 What are the peak hour?
+
+select hour(time) time_in_hour, count(hour(`time`)) as Orders from orders
+group by hour(`time`) order by Orders desc;
+
+#3) How many pizza sold per day?
+with pizza_per_day_details as (
+with pizza_detail as (
+select o.order_id,o.date,o.time,od.pizza_id,od.quantity from orders o 
+inner join order_details od
+on o.order_id=od.order_id)
+select date, sum(quantity) as Pizza_quantity from pizza_detail
+group by `date`)
+select avg(pizza_quantity) from pizza_per_day_details;
+
+## 4)What are the bestselling pizza?
+select od.pizza_id,pt.name, sum(od.quantity) pizza_quantity from order_details od 
+inner join pizzas p
+on p.pizza_id=od.pizza_id
+inner join pizza_types pt 
+on pt.pizza_type_id=p.pizza_type_id
+group by od.pizza_id 
+order by pizza_quantity desc;
+
+## 5) How much money did we make this year?
+with pizza_total_sold_price as (
+with pizza_sale as (
+select year(date) as `year`, od.pizza_id ,sum(quantity) as total_quantity from orders o 
+inner join order_details od 
+on o.order_id=od.order_id
+group by `year`, od.pizza_id)
+select `year`, ps.pizza_id, total_quantity,p.price, (p.price*total_quantity) as total_sold_price from pizza_sale ps 
+inner join pizzas p 
+on ps.pizza_id=p.pizza_id)
+select year, round(sum(total_sold_price),2) as pizza_sold_amt from pizza_total_sold_price
+group by `year`;
+
+## 6) Are there any pizzas we should take of the menu, or any promotions we could leverage?
+
+select od.pizza_id,pt.name, sum(od.quantity) pizza_quantity from order_details od 
+inner join pizzas p
+on p.pizza_id=od.pizza_id
+inner join pizza_types pt 
+on pt.pizza_type_id=p.pizza_type_id
+group by od.pizza_id 
+order by pizza_quantity asc
+limit 4;
+
+
+
+
